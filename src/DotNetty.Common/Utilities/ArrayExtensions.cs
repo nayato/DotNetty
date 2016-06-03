@@ -13,6 +13,8 @@ namespace DotNetty.Common.Utilities
     {
         public static readonly byte[] ZeroBytes = new byte[0];
 
+        public static readonly char[] ZeroChars = new char[0];
+
         public static T[] Slice<T>(this T[] array, int length)
         {
             Contract.Requires(array != null);

@@ -71,6 +71,7 @@
     <CodeContractsRuntimeCheckingLevel>Preconditions</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
     <CodeContractsAnalysisWarningLevel>0</CodeContractsAnalysisWarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -202,7 +203,10 @@
     <Compile Include="ThreadLocalPool.cs" />
     <Compile Include="PreciseTimeSpan.cs" />
     <Compile Include="Utilities\AbstractConstant.cs" />
+    <Compile Include="Utilities\AsciiString.cs" />
     <Compile Include="Utilities\AtomicReference.cs" />
+    <Compile Include="Utilities\CharExtensions.cs" />
+    <Compile Include="Utilities\CharSequence.cs" />
     <Compile Include="Utilities\DefaultAttributeMap.cs" />
     <Compile Include="Utilities\IAttribute.cs" />
     <Compile Include="Utilities\AttributeKey.cs" />
@@ -213,11 +217,13 @@
     <Compile Include="Utilities\IAttributeMap.cs" />
     <Compile Include="Utilities\IConstant.cs" />
     <Compile Include="Utilities\IntegerExtensions.cs" />
+    <Compile Include="Internal\MathUtil.cs" />
     <Compile Include="Utilities\PriorityQueue.cs" />
     <Compile Include="Utilities\RandomExtensions.cs" />
     <Compile Include="Utilities\ReferenceCountUtil.cs" />
     <Compile Include="Internal\SystemPropertyUtil.cs" />
     <Compile Include="Utilities\ReferenceEqualityComparer.cs" />
+    <Compile Include="Utilities\StringCharSequence.cs" />
     <Compile Include="Utilities\StringUtil.cs" />
     <Compile Include="Utilities\TaskEx.cs" />
     <Compile Include="Utilities\ByteProcessor.cs" />

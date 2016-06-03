@@ -4,6 +4,7 @@
 namespace DotNetty.Common
 {
     using System;
+    using System.Collections.Generic;
     using System.Runtime.CompilerServices;
     using System.Text;
     using System.Threading;
@@ -29,6 +30,7 @@ namespace DotNetty.Common
         // Core thread-locals
         int futureListenerStackDepth;
         int localChannelReaderStackDepth;
+        List<object> list;
 
         // String-related thread-locals
         StringBuilder stringBuilder;
@@ -127,6 +129,26 @@ namespace DotNetty.Common
                 }
                 return builder;
             }
+        }
+
+        public List<object> List => this.GetList(8);
+
+        public List<object> GetList(int capacity)
+        {
+            List<object> result = this.list;
+            if (result == null)
+            {
+                this.list = result = new List<object>(capacity);
+            }
+            else
+            {
+                result.Clear();
+                if (result.Capacity < capacity)
+                {
+                    result.Capacity = capacity;
+                }
+            }
+            return result;
         }
 
         public int FutureListenerStackDepth
