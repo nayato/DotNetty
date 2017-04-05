@@ -6,11 +6,11 @@ namespace DotNetty.Buffers
     using System.Diagnostics.Contracts;
     using DotNetty.Common;
 
-    public abstract class DefaultByteBufferHolder : IByteBufferHolder
+    public class DefaultByteBufferHolder : IByteBufferHolder
     {
         readonly IByteBuffer buffer;
 
-        protected DefaultByteBufferHolder(IByteBuffer buffer)
+        public DefaultByteBufferHolder(IByteBuffer buffer)
         {
             Contract.Requires(buffer != null);
 
@@ -67,18 +67,17 @@ namespace DotNetty.Buffers
                 return true;
             }
 
-            if (obj is DefaultByteBufferHolder)
-            {
-                return this.buffer.Equals(((DefaultByteBufferHolder)obj).buffer);
-            }
-
-            return false;
+            var holder = obj as IByteBufferHolder;
+            return holder != null 
+                && this.buffer.Equals(holder.Content);
         }
 
         public override int GetHashCode() => this.buffer.GetHashCode();
 
-        public abstract IByteBufferHolder Copy();
+        public virtual IByteBufferHolder Copy() => this.Replace(this.Content.Copy());
 
-        public abstract IByteBufferHolder Duplicate();
+        public virtual IByteBufferHolder Duplicate() => this.Replace(this.Content.Duplicate());
+
+        public IByteBufferHolder Replace(IByteBuffer content) => new DefaultByteBufferHolder(content);
     }
 }

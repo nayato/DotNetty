@@ -382,6 +382,8 @@ namespace DotNetty.Buffers
         /// </exception>
         IByteBuffer GetBytes(int index, Stream destination, int length);
 
+        ICharSequence GetCharSequence(int index, int length, Encoding encoding);
+
         /// <summary>
         ///     Sets the specified boolean at the specified absolute <paramref name="index" /> in this buffer.
         ///     This method does not directly modify <see cref="ReaderIndex" /> or <see cref="WriterIndex" /> of this buffer.
@@ -569,6 +571,8 @@ namespace DotNetty.Buffers
 
         IByteBuffer SetZero(int index, int length);
 
+        int SetCharSequence(int index, ICharSequence sequence, Encoding encoding);
+
         /// <summary>
         ///     Gets a boolean at the current <see cref="ReaderIndex" /> and increases the <see cref="ReaderIndex" />
         ///     by <c>1</c> in this buffer.
@@ -679,6 +683,8 @@ namespace DotNetty.Buffers
         IByteBuffer ReadBytes(byte[] destination, int dstIndex, int length);
 
         IByteBuffer ReadBytes(Stream destination, int length);
+
+        ICharSequence ReadCharSequence(int length, Encoding encoding);
 
         /// <summary>
         ///     Increases the current <see cref="ReaderIndex" /> by the specified <paramref name="length" /> in this buffer.
@@ -852,6 +858,8 @@ namespace DotNetty.Buffers
         Task WriteBytesAsync(Stream stream, int length, CancellationToken cancellationToken);
 
         IByteBuffer WriteZero(int length);
+
+        int WriteCharSequence(ICharSequence sequence, Encoding encoding);
 
         string ToString(Encoding encoding);
 

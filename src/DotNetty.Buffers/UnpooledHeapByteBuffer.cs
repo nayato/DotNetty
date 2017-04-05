@@ -3,7 +3,6 @@
 
 namespace DotNetty.Buffers
 {
-    using DotNetty.Common.Utilities;
     using System;
     using System.Diagnostics.Contracts;
     using System.IO;
@@ -12,7 +11,6 @@ namespace DotNetty.Buffers
 
     public class UnpooledHeapByteBuffer : AbstractReferenceCountedByteBuffer
     {
-        readonly IByteBufferAllocator allocator;
         byte[] array;
 
         /// <summary>
@@ -43,14 +41,14 @@ namespace DotNetty.Buffers
             Contract.Requires(initialArray != null);
             Contract.Requires(initialArray.Length <= maxCapacity);
 
-            this.allocator = allocator;
+            this.Allocator = allocator;
             this.SetArray(initialArray);
             this.SetIndex(readerIndex, writerIndex);
         }
 
         protected void SetArray(byte[] initialArray) => this.array = initialArray;
 
-        public override IByteBufferAllocator Allocator => this.allocator;
+        public override IByteBufferAllocator Allocator { get; }
 
         public override ByteOrder Order => ByteOrder.BigEndian;
 
@@ -261,7 +259,7 @@ namespace DotNetty.Buffers
             return this;
         }
 
-        protected override void _SetByte(int index, int value) => this.array[index] = (byte)value;
+        protected internal override void _SetByte(int index, int value) => this.array[index] = (byte)value;
 
         public override IByteBuffer SetShort(int index, int value)
         {

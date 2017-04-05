@@ -10,21 +10,18 @@ namespace DotNetty.Buffers
     using DotNetty.Common;
     using DotNetty.Common.Utilities;
 
-    sealed class PooledHeapByteBuffer : PooledByteBuffer<byte[]>
+    class PooledHeapByteBuffer : PooledByteBuffer<byte[]>
     {
         static readonly ThreadLocalPool<PooledHeapByteBuffer> Recycler = new ThreadLocalPool<PooledHeapByteBuffer>(handle => new PooledHeapByteBuffer(handle, 0));
 
         internal static PooledHeapByteBuffer NewInstance(int maxCapacity)
         {
             PooledHeapByteBuffer buf = Recycler.Take();
-            buf.SetReferenceCount(1); // todo: reuse method?
-            buf.MaxCapacity = maxCapacity;
-            buf.SetIndex(0, 0);
-            buf.DiscardMarkers();
+            buf.Reuse(maxCapacity);
             return buf;
         }
 
-        PooledHeapByteBuffer(ThreadLocalPool.Handle recyclerHandle, int maxCapacity)
+        protected internal PooledHeapByteBuffer(ThreadLocalPool.Handle recyclerHandle, int maxCapacity)
             : base(recyclerHandle, maxCapacity)
         {
         }
@@ -95,7 +92,7 @@ namespace DotNetty.Buffers
             return this;
         }
 
-        protected override void _SetByte(int index, int value) => this.Memory[this.Idx(index)] = (byte)value;
+        protected internal override void _SetByte(int index, int value) => this.Memory[this.Idx(index)] = (byte)value;
 
         protected override void _SetShort(int index, int value)
         {

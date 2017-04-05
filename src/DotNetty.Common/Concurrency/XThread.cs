@@ -10,7 +10,7 @@ namespace DotNetty.Common.Concurrency
 
     public delegate void XParameterizedThreadStart(object obj);
 
-    [DebuggerDisplay("ID={threadId}, Name={Name}, IsExplicit={isExplicit}")]
+    [DebuggerDisplay("ID={Id}, Name={Name}, IsExplicit={isExplicit}")]
     public sealed class XThread
     {
         static int maxThreadId;
@@ -18,7 +18,6 @@ namespace DotNetty.Common.Concurrency
         [ThreadStatic]
         static XThread currentThread;
 
-        readonly int threadId;
 #pragma warning disable CS0414
         readonly bool isExplicit; // For debugging only
 #pragma warning restore CS0414
@@ -31,14 +30,14 @@ namespace DotNetty.Common.Concurrency
 
         XThread()
         {
-            this.threadId = GetNewThreadId();
+            this.Id = GetNewThreadId();
             this.isExplicit = false;
             this.IsAlive = false;
         }
 
         public XThread(Action action)
         {
-            this.threadId = GetNewThreadId();
+            this.Id = GetNewThreadId();
             this.isExplicit = true;
             this.IsAlive = false;
             this.CreateLongRunningTask(x => action());
@@ -46,7 +45,7 @@ namespace DotNetty.Common.Concurrency
 
         public XThread(XParameterizedThreadStart threadStartFunc)
         {
-            this.threadId = GetNewThreadId();
+            this.Id = GetNewThreadId();
             this.isExplicit = true;
             this.IsAlive = false;
             this.CreateLongRunningTask(threadStartFunc);
@@ -91,6 +90,8 @@ namespace DotNetty.Common.Concurrency
         }
 
         public static void Sleep(int millisecondsTimeout) => Task.Delay(millisecondsTimeout).Wait();
+
+        public int Id { get; }
 
         public string Name { get; set; }
 

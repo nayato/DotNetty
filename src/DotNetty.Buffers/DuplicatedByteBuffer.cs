@@ -79,7 +79,7 @@ namespace DotNetty.Buffers
             return this;
         }
 
-        protected override void _SetByte(int index, int value) => this.buffer.SetByte(index, value);
+        protected internal override void _SetByte(int index, int value) => this.buffer.SetByte(index, value);
 
         public override IByteBuffer SetShort(int index, int value)
         {

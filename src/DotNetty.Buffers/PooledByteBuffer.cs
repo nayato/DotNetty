@@ -50,6 +50,15 @@ namespace DotNetty.Buffers
             this.MaxLength = maxLength;
             this.SetIndex(0, 0);
         }
+        
+        // Method must be called before reuse this {@link PooledByteBufAllocator}
+        internal void Reuse(int maxCapacity)
+        {
+            this.SetReferenceCount(1);
+            this.MaxCapacity = maxCapacity;
+            this.SetIndex(0, 0);
+            this.DiscardMarkers();
+        }
 
         public override int Capacity => this.Length;
 

@@ -660,7 +660,9 @@ namespace DotNetty.Buffers
             // Rely on GC.
         }
 
-        protected override PooledByteBuffer<byte[]> NewByteBuf(int maxCapacity) => PooledHeapByteBuffer.NewInstance(maxCapacity);
+        protected override PooledByteBuffer<byte[]> NewByteBuf(int maxCapacity) =>
+            //PooledUnsafeHeapByteBuffer.NewUnsafeInstance(maxCapacity);
+            PooledHeapByteBuffer.NewInstance(maxCapacity);
 
         protected override void MemoryCopy(byte[] src, int srcOffset, byte[] dst, int dstOffset, int length)
         {

@@ -4,6 +4,7 @@
 namespace DotNetty.Common
 {
     using System;
+    using System.Collections.Generic;
     using System.Runtime.CompilerServices;
     using System.Text;
     using System.Threading;
@@ -32,6 +33,9 @@ namespace DotNetty.Common
 
         // String-related thread-locals
         StringBuilder stringBuilder;
+
+        // ArrayList-related thread-locals
+        List<ICharSequence> list;
 
         internal static int NextVariableIndex()
         {
@@ -127,6 +131,19 @@ namespace DotNetty.Common
                 }
                 return builder;
             }
+        }
+
+        public List<ICharSequence> CharSequenceList(int minCapacity)
+        {
+            List<ICharSequence> localList = this.list;
+            if (localList == null)
+            {
+                this.list = new List<ICharSequence>(minCapacity);
+                return this.list;
+            }
+
+            localList.Clear();
+            return localList;
         }
 
         public int FutureListenerStackDepth

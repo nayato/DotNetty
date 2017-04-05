@@ -16,5 +16,10 @@ namespace DotNetty.Codecs
             : base(null, cause)
         {
         }
+
+        public DecoderException(string message, Exception cause)
+            : base(message, cause)
+        {
+        }
     }
 }

@@ -136,7 +136,7 @@ namespace DotNetty.Buffers
             return this;
         }
 
-        protected override void _SetByte(int index, int value) => this.buffer.SetByte(index + this.adjustment, value);
+        protected internal override void _SetByte(int index, int value) => this.buffer.SetByte(index + this.adjustment, value);
 
         protected override void _SetShort(int index, int value) => this.buffer.SetShort(index + this.adjustment, value);
 

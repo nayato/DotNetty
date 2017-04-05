@@ -187,13 +187,15 @@ namespace DotNetty.Buffers
             return buffer is UnreleasableByteBuffer ? buffer : UnreleasableBuffer(buffer);
         }
 
+        public static CompositeByteBuffer CompositeBuffer(int maxNumComponents) => new CompositeByteBuffer(Allocator, maxNumComponents);
+
         /// <summary>
-        ///     Creates a new big-endian buffer whose content is a copy of the specified <see cref="array" />.
+        ///     Creates a new big-endian buffer whose content is a copy of the specified <para name="array" />.
         ///     The new buffer's <see cref="IByteBuffer.ReaderIndex" /> and <see cref="IByteBuffer.WriterIndex" />
         ///     are <c>0</c> and <see cref="Array.Length" /> respectively.
         /// </summary>
         /// <param name="array">A buffer we're going to copy.</param>
-        /// <returns>The new buffer that copies the contents of <see cref="array" />.</returns>
+        /// <returns>The new buffer that copies the contents of <para name="array" />.</returns>
         public static IByteBuffer CopiedBuffer(byte[] array)
         {
             Contract.Requires(array != null);

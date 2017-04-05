@@ -11,7 +11,6 @@ namespace DotNetty.Buffers
     using System.Threading.Tasks;
     using DotNetty.Common;
     using DotNetty.Common.Utilities;
-    using System.Runtime.CompilerServices;
 
     /// <summary>
     ///     Wrapper which swaps the <see cref="ByteOrder" /> of a <see cref="IByteBuffer" />.
@@ -231,6 +230,11 @@ namespace DotNetty.Buffers
             return this;
         }
 
+        public ICharSequence GetCharSequence(int index, int length, Encoding encoding)
+        {
+            return this.buf.GetCharSequence(index, length, encoding);
+        }
+
         public IByteBuffer SetBoolean(int index, bool value)
         {
             this.buf.SetBoolean(index, value);
@@ -339,6 +343,11 @@ namespace DotNetty.Buffers
             return this;
         }
 
+        public int SetCharSequence(int index, ICharSequence sequence, Encoding encoding)
+        {
+            return this.buf.SetCharSequence(index, sequence, encoding);
+        }
+
         public Task<int> SetBytesAsync(int index, Stream src, int length, CancellationToken cancellationToken) => this.buf.SetBytesAsync(index, src, length, cancellationToken);
 
         public bool ReadBoolean() => this.buf.ReadBoolean();
@@ -413,6 +422,11 @@ namespace DotNetty.Buffers
         {
             this.buf.ReadBytes(destination, length);
             return this;
+        }
+
+        public ICharSequence ReadCharSequence(int length, Encoding encoding)
+        {
+            return this.buf.ReadCharSequence(length, encoding);
         }
 
         public IByteBuffer SkipBytes(int length)
@@ -578,6 +592,11 @@ namespace DotNetty.Buffers
         {
             this.buf.WriteZero(length);
             return this;
+        }
+
+        public int WriteCharSequence(ICharSequence sequence, Encoding encoding)
+        {
+            return this.buf.WriteCharSequence(sequence, encoding);
         }
 
         public int ForEachByte(ByteProcessor processor) => this.buf.ForEachByte(processor);

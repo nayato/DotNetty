@@ -16,5 +16,10 @@ namespace DotNetty.Codecs
             : base(null, innerException)
         {
         }
+
+        public EncoderException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
     }
 }

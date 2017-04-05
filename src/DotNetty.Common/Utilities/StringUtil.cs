@@ -7,6 +7,7 @@ namespace DotNetty.Common.Utilities
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Diagnostics.Contracts;
+    using System.Runtime.CompilerServices;
     using System.Text;
 
     /// <summary>
@@ -19,6 +20,7 @@ namespace DotNetty.Common.Utilities
         public const char LineFeed = '\n';
         public const char CarriageReturn = '\r';
         public const char Tab = '\t';
+        public const char Space = '\x20';
         public const byte UpperCaseToLowerCaseAsciiOffset = 'a' - 'A';
         public static readonly string Newline;
         static readonly string[] Byte2HexPad = new string[256];
@@ -129,20 +131,6 @@ namespace DotNetty.Common.Utilities
         }
 
         /// <summary>
-        ///     Get the item after one char delim if the delim is found (else null).
-        ///     This operation is a simplified and optimized
-        ///     version of {@link String#split(String, int)}.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="delim"></param>
-        /// <returns></returns>
-        public static string SubstringAfter(this string value, char delim)
-        {
-            int pos = value.IndexOf(delim);
-            return pos >= 0 ? value.Substring(pos + 1) : null;
-        }
-
-        /// <summary>
         ///     Converts the specified byte value into a 2-digit hexadecimal integer.
         /// </summary>
         public static string ByteToHexStringPadded(int value) => Byte2HexPad[value & 0xff];
@@ -240,20 +228,44 @@ namespace DotNetty.Common.Utilities
         ///     The value which will be escaped according to
         ///     <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
         /// </param>
+        /// <param name="trimWhiteSpace">
+        ///     The value will first be trimmed of its optional white-space characters, according to 
+        ///     <a href= "https://tools.ietf.org/html/rfc7230#section-7" >RFC-7230</a>
+        /// </param>
         /// <returns>the escaped value if necessary, or the value unchanged</returns>
-        public static string EscapeCsv(string value)
+        public static ICharSequence EscapeCsv(ICharSequence value, bool trimWhiteSpace = false)
         {
-            int length = value.Length;
+            int length = value.Count;
             if (length == 0)
             {
                 return value;
             }
+
+            int start = 0;
             int last = length - 1;
-            bool quoted = IsDoubleQuote(value[0]) && IsDoubleQuote(value[last]) && length != 1;
+            bool trimmed = false;
+            if (trimWhiteSpace)
+            {
+                start = IndexOfFirstNonOwsChar(value, length);
+                if (start == length)
+                {
+                    return StringCharSequence.Empty;
+                }
+
+                last = IndexOfLastNonOwsChar(value, start, length);
+                trimmed = start > 0 || last < length - 1;
+                if (trimmed)
+                {
+                    length = last - start + 1;
+                }
+            }
+
+            var result = new StringBuilderCharSequence(length + CsvNumberEscapeCharacters);
+            bool quoted = IsDoubleQuote(value[start]) && IsDoubleQuote(value[last]) && length != 1;
             bool foundSpecialCharacter = false;
             bool escapedDoubleQuote = false;
-            StringBuilder escaped = new StringBuilder(length + CsvNumberEscapeCharacters).Append(DoubleQuote);
-            for (int i = 0; i < length; i++)
+
+            for (int i = start; i <= last; i++)
             {
                 char current = value[i];
                 switch (current)
@@ -263,7 +275,7 @@ namespace DotNetty.Common.Utilities
                         {
                             if (!quoted)
                             {
-                                escaped.Append(DoubleQuote);
+                                result.Append(DoubleQuote);
                             }
                             else
                             {
@@ -276,7 +288,7 @@ namespace DotNetty.Common.Utilities
                             if (!IsDoubleQuote(value[i - 1]) &&
                                 (!isNextCharDoubleQuote || i + 1 == last))
                             {
-                                escaped.Append(DoubleQuote);
+                                result.Append(DoubleQuote);
                                 escapedDoubleQuote = true;
                             }
                         }
@@ -287,12 +299,196 @@ namespace DotNetty.Common.Utilities
                         foundSpecialCharacter = true;
                         break;
                 }
-                escaped.Append(current);
+                result.Append(current);
             }
-            return escapedDoubleQuote || foundSpecialCharacter && !quoted ?
-                escaped.Append(DoubleQuote).ToString() : value;
+
+            if (escapedDoubleQuote || foundSpecialCharacter && !quoted)
+            {
+                return Quote(result);
+            }
+            if (trimmed)
+            {
+                return quoted ? Quote(result) : result;
+            }
+
+            return value;
         }
 
+        static StringBuilderCharSequence Quote(StringBuilderCharSequence builder)
+        {
+            builder.Insert(0, DoubleQuote);
+            builder.Append(DoubleQuote);
+
+            return builder;
+        }
+
+        public static IList<ICharSequence> UnescapeCsvFields(ICharSequence value)
+        {
+            var unescaped = new List<ICharSequence>(2);
+            StringBuilder current = InternalThreadLocalMap.Get().StringBuilder;
+            bool quoted = false;
+            int last = value.Count - 1;
+            for (int i = 0; i <= last; i++)
+            {
+                char c = value[i];
+                if (quoted)
+                {
+                    switch (c)
+                    {
+                        case DoubleQuote:
+                            if (i == last)
+                            {
+                                // Add the last field and return
+                                unescaped.Add((StringCharSequence)current.ToString());
+                                return unescaped;
+                            }
+                            char next = value[++i];
+                            if (next == DoubleQuote)
+                            {
+                                // 2 double-quotes should be unescaped to one
+                                current.Append(DoubleQuote);
+                            }
+                            else if (next == Comma)
+                            {
+                                // This is the end of a field. Let's start to parse the next field.
+                                quoted = false;
+                                unescaped.Add((StringCharSequence)current.ToString());
+                                current.Length = 0;
+                            }
+                            else
+                            {
+                                // double-quote followed by other character is invalid
+                                throw new ArgumentException($"invalid escaped CSV field: {value} index: {i - 1}");
+                            }
+                            break;
+                        default:
+                            current.Append(c);
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (c)
+                    {
+                        case Comma:
+                            // Start to parse the next field
+                            unescaped.Add((StringCharSequence)current.ToString());
+                            current.Length = 0;
+                            break;
+                        case DoubleQuote:
+                            if (current.Length == 0)
+                            {
+                                quoted = true;
+                            }
+                            else
+                            {
+                                // double-quote appears without being enclosed with double-quotes
+                                current.Append(c);
+                            }
+                            break;
+                        case LineFeed:
+                        case CarriageReturn:
+                            // special characters appears without being enclosed with double-quotes
+                            throw new ArgumentException($"invalid escaped CSV field: {value} index: {i}");
+                        default:
+                            current.Append(c);
+                            break;
+                    }
+                }
+            }
+            if (quoted)
+            {
+                throw new ArgumentException($"invalid escaped CSV field: {value} index: {last}");
+            }
+
+            unescaped.Add((StringCharSequence)current.ToString());
+            return unescaped;
+        }
+
+        public static int IndexOfNonWhiteSpace(IReadOnlyList<char> seq, int offset)
+        {
+            for (; offset < seq.Count; ++offset)
+            {
+                if (!char.IsWhiteSpace(seq[offset]))
+                {
+                    return offset;
+                }
+            }
+
+            return -1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsSurrogate(char c) => c >= '\uD800' && c <= '\uDFFF';
+
+        public static bool EndsWith(IReadOnlyList<char> s, char c)
+        {
+            int len = s.Count;
+            return len > 0 && s[len - 1] == c;
+        }
+
+        public static ICharSequence TrimOws(ICharSequence value)
+        {
+            int length = value.Count;
+            if (length == 0)
+            {
+                return value;
+            }
+
+            int start = IndexOfFirstNonOwsChar(value, length);
+            int end = IndexOfLastNonOwsChar(value, start, length);
+            return start == 0 && end == length - 1 ? value : value.SubSequence(start, end + 1);
+        }
+
+        internal static int IndexOf(IReadOnlyList<char> value, char ch, int start)
+        {
+            Contract.Requires(start >= 0 && start < value.Count);
+
+            char upper = char.ToUpper(ch);
+            char lower = char.ToLower(ch);
+            int i = start;
+            while (i < value.Count)
+            {
+                char c1 = value[i];
+                if (c1 == ch
+                    && char.ToUpper(c1).CompareTo(upper) != 0
+                    && char.ToLower(c1).CompareTo(lower) != 0)
+                {
+                    return i;
+                }
+
+                i++;
+            }
+
+            return -1;
+        }
+
+        static int IndexOfFirstNonOwsChar(IReadOnlyList<char> value, int length)
+        {
+            int i = 0;
+            while (i < length && IsOws(value[i]))
+            {
+                i++;
+            }
+
+            return i;
+        }
+
+        static int IndexOfLastNonOwsChar(IReadOnlyList<char> value, int start, int length)
+        {
+            int i = length - 1;
+            while (i > start && IsOws(value[i]))
+            {
+                i--;
+            }
+
+            return i;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static bool IsOws(char c) => c == Space || c == Tab;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static bool IsDoubleQuote(char c) => c == DoubleQuote;
 
         /// <summary>

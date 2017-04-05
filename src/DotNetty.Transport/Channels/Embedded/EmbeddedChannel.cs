@@ -6,6 +6,7 @@ namespace DotNetty.Transport.Channels.Embedded
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.Contracts;
     using System.Net;
     using System.Runtime.ExceptionServices;
     using System.Threading.Tasks;
@@ -84,13 +85,40 @@ namespace DotNetty.Transport.Channels.Embedded
         public EmbeddedChannel(IChannelId id, bool hasDisconnect, params IChannelHandler[] handlers)
             : base(null, id)
         {
+            Contract.Requires(handlers != null);
+
             this.Metadata = hasDisconnect ? METADATA_DISCONNECT : METADATA_NO_DISCONNECT;
             this.Configuration = new DefaultChannelConfiguration(this);
-            if (handlers == null)
-            {
-                throw new ArgumentNullException(nameof(handlers));
-            }
+            this.Setup(handlers);
+        }
 
+        /// <summary>
+        /// Create a new instance with the channel ID set to the given ID and the pipeline
+        /// initialized with the specified handlers.
+        /// </summary>
+        /// <param name="id">The <see cref="IChannelId" /> of this channel.</param>
+        /// <param name="hasDisconnect">
+        ///     <c>false</c> if this <see cref="IChannel" /> will delegate <see cref="DisconnectAsync" />
+        ///     to <see cref="CloseAsync" />, <c>true</c> otherwise.
+        /// </param>
+        /// <param name="config">
+        ///    The<see cref="IChannelConfiguration"/> will be returned by <see cref="Configuration"/></param>
+        /// <param name="handlers">
+        ///     The <see cref="IChannelHandler" />s that will be added to the <see cref="IChannelPipeline" />
+        /// </param>
+        public EmbeddedChannel(IChannelId id, bool hasDisconnect, IChannelConfiguration config, params IChannelHandler[] handlers)
+            : base(null, id)
+        {
+            Contract.Requires(config != null);
+            Contract.Requires(handlers != null);
+
+            this.Metadata = hasDisconnect ? METADATA_DISCONNECT : METADATA_NO_DISCONNECT;
+            this.Configuration = config;
+            this.Setup(handlers);
+        }
+
+        void Setup(params IChannelHandler[] handlers)
+        {
             IChannelPipeline p = this.Pipeline;
             p.AddLast(new ActionChannelInitializer<IChannel>(channel =>
             {
@@ -381,7 +409,7 @@ namespace DotNetty.Transport.Channels.Embedded
 
         static bool ReleaseAll(Queue<object> queue)
         {
-            if (queue.Count > 0)
+            if (queue != null && queue.Count > 0)
             {
                 for (;;)
                 {
@@ -394,6 +422,7 @@ namespace DotNetty.Transport.Channels.Embedded
                 }
                 return true;
             }
+
             return false;
         }
 

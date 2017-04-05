@@ -63,7 +63,7 @@ namespace DotNetty.Buffers
             return this;
         }
 
-        public virtual IByteBuffer SetIndex(int readerIndex, int writerIndex)
+        public IByteBuffer SetIndex(int readerIndex, int writerIndex)
         {
             if (readerIndex < 0 || readerIndex > writerIndex || writerIndex > this.Capacity)
             {
@@ -346,6 +346,23 @@ namespace DotNetty.Buffers
 
         public abstract IByteBuffer GetBytes(int index, Stream destination, int length);
 
+        public ICharSequence GetCharSequence(int index, int length, Encoding encoding)
+        {
+            if (Equals(encoding, Encoding.ASCII))
+            {
+                return new AsciiString(this.ToString(index, length, encoding));
+            }
+
+            return new StringCharSequence(this.ToString(index, length, encoding));
+        }
+
+        public ICharSequence ReadCharSequence(int length, Encoding encoding)
+        {
+            ICharSequence sequence = this.GetCharSequence(this.ReaderIndex, length, encoding);
+            this.ReaderIndex += length;
+            return sequence;
+        }
+
         public virtual IByteBuffer SetBoolean(int index, bool value)
         {
             this.SetByte(index, value ? 1 : 0);
@@ -359,7 +376,7 @@ namespace DotNetty.Buffers
             return this;
         }
 
-        protected abstract void _SetByte(int index, int value);
+        protected internal abstract void _SetByte(int index, int value);
 
         public virtual IByteBuffer SetShort(int index, int value)
         {
@@ -489,6 +506,26 @@ namespace DotNetty.Buffers
             }
 
             return this;
+        }
+
+        public int SetCharSequence(int index, ICharSequence sequence, Encoding encoding)
+        {
+            if (encoding.Equals(Encoding.UTF8))
+            {
+                this.EnsureWritable(Encoding.UTF8.GetMaxByteCount(sequence.Count));
+                return ByteBufferUtil.WriteUtf8(this, index, sequence, sequence.Count);
+            }
+            if (encoding.Equals(Encoding.ASCII))
+            {
+                int len = sequence.Count;
+                this.EnsureWritable(len);
+                return ByteBufferUtil.WriteAscii(this, index, sequence, len);
+            }
+
+            byte[] bytes = encoding.GetBytes(sequence.ToString());
+            this.EnsureWritable(bytes.Length);
+            this.SetBytes(index, bytes);
+            return bytes.Length;
         }
 
         public virtual bool ReadBoolean() => this.ReadByte() != 0;
@@ -797,6 +834,13 @@ namespace DotNetty.Buffers
             this.SetZero(this.WriterIndex, length);
             this.WriterIndex += length;
             return this;
+        }
+
+        public int WriteCharSequence(ICharSequence sequence, Encoding encoding)
+        {
+            int written = this.SetCharSequence(this.WriterIndex, sequence, encoding);
+            this.WriterIndex += written;
+            return written;
         }
 
         public abstract bool HasArray { get; }
