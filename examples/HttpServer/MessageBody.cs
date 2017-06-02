@@ -13,6 +13,6 @@ namespace HttpServer
         public string Message { get; }
 
         public string ToJsonFormat() => 
-            "{" + $"\"{nameof(MessageBody)}\" :" + "{" + $"\"{nameof(this.Message)}\"" + " :\"" + this.Message + "\"}" +"}";
+            $"{{\"{nameof(MessageBody)}\":{{\"{nameof(this.Message)}\":\"{this.Message}\"}}";
     }
 }
