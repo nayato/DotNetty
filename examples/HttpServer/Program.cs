@@ -31,7 +31,7 @@ namespace HttpServer
             {
                 var dispatcherLoop = new DispatcherEventLoop();
                 group = new MultithreadEventLoopGroup(_ => dispatcherLoop, 1);
-                workGroup = new MultiLoopGroup(dispatcherLoop);
+                workGroup = new MultiLoopGroup(dispatcherLoop, Environment.ProcessorCount);
             }
             else
             {
