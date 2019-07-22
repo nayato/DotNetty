@@ -4,7 +4,6 @@
 namespace DotNetty.Common.Utilities
 {
     using System;
-    using System.Threading;
     using DotNetty.Common.Internal.Logging;
     using Thread = DotNetty.Common.Concurrency.XThread;
 
@@ -113,7 +112,10 @@ namespace DotNetty.Common.Utilities
             }
             catch (Exception ex)
             {
-                Logger.Warn("Failed to release a message: {}", msg, ex);
+                if (Logger.WarnEnabled)
+                {
+                    Logger.Warn("Failed to release a message: {}; Stack trace: {}", msg, Environment.StackTrace, ex);
+                }
             }
         }
 
@@ -134,7 +136,7 @@ namespace DotNetty.Common.Utilities
             {
                 if (Logger.WarnEnabled)
                 {
-                    Logger.Warn("Failed to release a message: {} (decrement: {})", msg, decrement, ex);
+                    Logger.Warn("Failed to release a message: {} (decrement: {}); Stack trace: {}", msg, decrement, Environment.StackTrace, ex);
                 }
             }
         }
@@ -147,7 +149,10 @@ namespace DotNetty.Common.Utilities
             }
             catch (Exception ex)
             {
-                Logger.Warn("Failed to release a message: {}", msg, ex);
+                if (Logger.WarnEnabled)
+                {
+                    Logger.Warn("Failed to release a message: {}; Stack trace: {}", msg, Environment.StackTrace, ex);
+                }
             }
         }
 
@@ -159,7 +164,10 @@ namespace DotNetty.Common.Utilities
             }
             catch (Exception ex)
             {
-                Logger.Warn("Failed to release a message: {} (decrement: {})", msg, decrement, ex);
+                if (Logger.WarnEnabled)
+                {
+                    Logger.Warn("Failed to release a message: {} (decrement: {}); Stack trace: {}", msg, decrement, Environment.StackTrace, ex);
+                }
             }
         }
 
